@@ -99,11 +99,10 @@ contract EVote {
     ) public isAdmin returns (uint256 _id) {
         // returns: id
 
-        uint256 _start_at = _start_after_in_days * 24 * 60 * 60;
-        uint256 _end_at = (_start_after_in_days + _end_after_in_days) *
-            25 *
-            60 *
-            60;
+        uint256 _start_at = block.timestamp +
+            (_start_after_in_days * 24 * 60 * 60);
+        uint256 _end_at = block.timestamp +
+            ((_start_after_in_days + _end_after_in_days) * 25 * 60 * 60);
 
         // Election memory new_election = Election({
         //     id: elections.length,
@@ -132,9 +131,9 @@ contract EVote {
         return id;
     }
 
-    function get_election(uint256 _id)
+    // function to get info about election
+    function get_election(uint256 _election_id)
         public
-        view
         returns (
             string memory name,
             string memory desc,
@@ -146,7 +145,12 @@ contract EVote {
             uint256 no_of_candidates
         )
     {
-        Election storage election = elections[_id];
+        if (elections[_election_id].end_at < block.timestamp) {
+            // while checking if we find out that election end time exceed in that case we will finish the election
+            elections[_election_id].is_finished = true;
+        }
+
+        Election storage election = elections[_election_id];
         return (
             election.name,
             election.desc,
@@ -175,6 +179,18 @@ contract EVote {
             !elections[_election_id].candidates[msg.sender].does_exist,
             "you are already a candidate, no need to fill form two times"
         );
+
+        if (elections[_election_id].end_at < block.timestamp) {
+            // while checking if we find out that election end time exceed in that case we will finish the election
+            elections[_election_id].is_finished = true;
+        }
+
+        // to create for for the candidate first election should not had finished
+        require(
+            !elections[_election_id].is_finished,
+            "election that you choose is already finished"
+        );
+
         Candidate memory candidate = Candidate({
             id: msg.sender,
             agenda: _agenda,
@@ -259,12 +275,30 @@ contract EVote {
             "given candidate doesn't exist"
         );
 
+        if (elections[_election_id].end_at < block.timestamp) {
+            // while checking if we find out that election end time exceed in that case we will finish the election
+            elections[_election_id].is_finished = true;
+        }
+
+        // to vote for the candidate first election should not have finished
+        require(
+            !elections[_election_id].is_finished,
+            "election that you choose is already finished"
+        );
+
+        // to vote fo the candidate first election should get started
+        require(
+            elections[_election_id].start_at < block.timestamp,
+            "election is not started yet"
+        );
+
         Voter memory voter = Voter({
             id: msg.sender,
             does_exist: true,
             voted_for: _candidate_address
         });
         elections[_election_id].voters[msg.sender] = voter;
+        elections[_election_id].no_of_voters++;
         elections[_election_id].candidates[_candidate_address].no_of_votes++;
     }
 }
