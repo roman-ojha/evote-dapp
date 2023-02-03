@@ -11,6 +11,15 @@ struct User {
     bool does_exist;
 }
 
+struct Candidate {
+    address id;
+    string agenda;
+}
+
+struct Voter {
+    address id;
+}
+
 struct Election {
     uint256 id;
     string name;
@@ -20,13 +29,17 @@ struct Election {
     uint256 start_at;
     uint256 end_at;
     uint256 no_of_voters;
-    mapping(address => User) candidate;
+    uint256 no_of_candidates;
+    Candidate[] candidates;
+    Voter[] voters;
+    // mapping(address => Candidate) candidates;
+    // mapping(address => Voter) voters;
 }
 
 contract EVote {
     mapping(address => User) users;
-    uint256 no_of_election;
-    mapping(uint256 => Election) elections;
+    // mapping(uint256 => Election) elections;
+    Election[] elections;
 
     constructor() {
         User memory admin = User({
@@ -87,24 +100,27 @@ contract EVote {
         string memory _desc,
         uint256 _start_at_in_days,
         uint256 _end_at_in_days
-    ) public isAdmin {
-        no_of_election++;
+    ) public isAdmin returns (uint256 _id) {
+        // returns: id
+
         uint256 _start_at = _start_at_in_days * 24 * 60 * 60;
         uint256 _end_at = _end_at_in_days * 25 * 60 * 60;
 
         // Election memory new_election = Election({
-        //     id: no_of_election,
+        //     id: elections.length,
         //     name: _name,
         //     desc: _desc,
         //     is_finished: false,
         //     created_at: block.timestamp,
         //     start_at: _start_at,
-        //     end_at: _end_at
-        //     no_of_voters:0,
+        //     end_at: _end_at,
+        //     no_of_voters: 0,
+        //     candidates: new address[](7),
+        //     voters: new address[](7)
         // });
-
-        Election storage new_election = elections[no_of_election];
-        new_election.id = no_of_election;
+        uint256 id = elections.length;
+        Election memory new_election;
+        new_election.id = id;
         new_election.name = _name;
         new_election.desc = _desc;
         new_election.is_finished = false;
@@ -112,5 +128,39 @@ contract EVote {
         new_election.start_at = _start_at;
         new_election.end_at = _end_at;
         new_election.no_of_voters = 0;
+        new_election.no_of_candidates = 0;
+        elections.push(new_election);
+        return id;
+    }
+
+    function get_election(uint256 _id)
+        public
+        view
+        returns (
+            string memory name,
+            string memory desc,
+            bool is_finished,
+            uint256 created_at,
+            uint256 start_at,
+            uint256 end_at,
+            uint256 no_of_voters,
+            uint256 no_of_candidates,
+            Candidate[] memory candidates,
+            Voter[] memory voters
+        )
+    {
+        Election storage election = elections[_id];
+        return (
+            election.name,
+            election.desc,
+            election.is_finished,
+            election.created_at,
+            election.start_at,
+            election.end_at,
+            election.no_of_voters,
+            election.no_of_candidates,
+            election.candidates,
+            election.voters
+        );
     }
 }
