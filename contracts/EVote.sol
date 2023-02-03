@@ -24,6 +24,22 @@ contract EVote {
         admin.id = payable(msg.sender);
     }
 
+    // Authentication
+    modifier isUser() {
+        require(
+            users[msg.sender].does_exist,
+            "unauthorized user, please login first"
+        );
+        _;
+    }
+    modifier isAdmin() {
+        require(
+            admin.id == msg.sender,
+            "unauthorized admin, you are not an admin"
+        );
+        _;
+    }
+
     function login() public {
         if (!users[msg.sender].does_exist) {
             // if user doesn't exist already
@@ -36,8 +52,22 @@ contract EVote {
         }
     }
 
-    function get_user() public view returns (User memory) {
-        require(users[msg.sender].does_exist, "User doesn't exist");
+    function get_user() public view isUser returns (User memory) {
         return users[msg.sender];
     }
+
+    function candidate_form() public payable isUser {
+        // can access by normal user to request for candidate
+        // for that user have to send '0.1' eth
+        users[msg.sender].user_type = user.candidate;
+    }
+
+    function am_I_a_candidate() public view isUser returns (bool) {
+        if (users[msg.sender].user_type == user.candidate) {
+            return true;
+        }
+        return false;
+    }
+
+    function add_candidate() public view {}
 }
