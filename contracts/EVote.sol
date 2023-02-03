@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity >=0.6.0 <0.9.0;
+
 enum Role {
     admin,
     user
@@ -15,10 +15,13 @@ struct Candidate {
     address id;
     string agenda;
     bool does_exist;
+    uint256 no_of_votes;
 }
 
 struct Voter {
     address id;
+    bool does_exist;
+    address voted_for;
 }
 
 struct Election {
@@ -34,7 +37,9 @@ struct Election {
     // Candidate[] candidates;
     // Voter[] voters;
     mapping(address => Candidate) candidates;
+    address[] candidatesAddress;
     mapping(address => Voter) voters;
+    address[] votersAddress;
 }
 
 contract EVote {
@@ -163,14 +168,24 @@ contract EVote {
         // for that user have to send '0.1' eth
         require(
             msg.value >= candidate_form_fee,
-            "Please submit with at least 100 wei"
+            "please submit with at least 100 wei"
+        );
+        // no need to create candidate if it already exist
+        require(
+            !elections[_election_id].candidates[msg.sender].does_exist,
+            "you are already a candidate, no need to fill form two times"
         );
         Candidate memory candidate = Candidate({
             id: msg.sender,
             agenda: _agenda,
-            does_exist: true
+            does_exist: true,
+            no_of_votes: 0
         });
         elections[_election_id].candidates[msg.sender] = candidate;
+        elections[_election_id].no_of_candidates++;
+        // add candidate address into candidatesAddress array
+        // it help to get all the Candidate[]
+        elections[_election_id].candidatesAddress.push(msg.sender);
     }
 
     function am_I_a_candidate(uint256 _election_id)
@@ -194,5 +209,62 @@ contract EVote {
     // function to get admin balance
     function get_admin_balance() public view isAdmin returns (uint256) {
         return address(msg.sender).balance;
+    }
+
+    // function to get all the candidates with given election id
+    function get_candidates(uint256 _election_id)
+        public
+        view
+        isUser
+        returns (Candidate[] memory)
+    {
+        Election storage election = elections[_election_id];
+        uint256 no_of_candidates = election.no_of_candidates;
+        Candidate[] memory candidates = new Candidate[](no_of_candidates);
+        for (uint256 i = 0; i < no_of_candidates; i++) {
+            candidates[i] = election.candidates[election.candidatesAddress[i]];
+        }
+        return candidates;
+    }
+
+    // function to get info about single candidate using given election id
+    function get_candidate(uint256 _election_id, address _candidate_address)
+        public
+        view
+        isUser
+        returns (Candidate memory)
+    {
+        // candidate should exist
+        require(
+            elections[_election_id].candidates[_candidate_address].does_exist,
+            "given candidate doesn't exist"
+        );
+        return elections[_election_id].candidates[_candidate_address];
+    }
+
+    // function to vote
+    function vote(uint256 _election_id, address _candidate_address)
+        public
+        isUser
+    {
+        // voter should not already have voted
+        require(
+            !elections[_election_id].voters[msg.sender].does_exist,
+            "you have already voted for this election"
+        );
+
+        // candidate should exist
+        require(
+            elections[_election_id].candidates[_candidate_address].does_exist,
+            "given candidate doesn't exist"
+        );
+
+        Voter memory voter = Voter({
+            id: msg.sender,
+            does_exist: true,
+            voted_for: _candidate_address
+        });
+        elections[_election_id].voters[msg.sender] = voter;
+        elections[_election_id].candidates[_candidate_address].no_of_votes++;
     }
 }
