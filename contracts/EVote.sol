@@ -40,6 +40,7 @@ struct Election {
     address[] candidatesAddress;
     mapping(address => Voter) voters;
     address[] votersAddress;
+    address won_by;
 }
 
 contract EVote {
@@ -99,10 +100,9 @@ contract EVote {
     ) public isAdmin returns (uint256 _id) {
         // returns: id
 
-        uint256 _start_at = block.timestamp +
-            (_start_after_in_days * 24 * 60 * 60);
+        uint256 _start_at = block.timestamp + (_start_after_in_days * 1 days);
         uint256 _end_at = block.timestamp +
-            ((_start_after_in_days + _end_after_in_days) * 25 * 60 * 60);
+            ((_start_after_in_days + _end_after_in_days) * 1 days);
 
         // Election memory new_election = Election({
         //     id: elections.length,
@@ -132,7 +132,7 @@ contract EVote {
     }
 
     // function to get info about election
-    function get_election(uint256 _election_id)
+    function get_election_info(uint256 _election_id)
         public
         returns (
             string memory name,
@@ -142,7 +142,8 @@ contract EVote {
             uint256 start_at,
             uint256 end_at,
             uint256 no_of_voters,
-            uint256 no_of_candidates
+            uint256 no_of_candidates,
+            address won_by
         )
     {
         if (elections[_election_id].end_at < block.timestamp) {
@@ -159,7 +160,8 @@ contract EVote {
             election.start_at,
             election.end_at,
             election.no_of_voters,
-            election.no_of_candidates
+            election.no_of_candidates,
+            election.won_by
         );
     }
 
@@ -225,6 +227,11 @@ contract EVote {
     // function to get admin balance
     function get_admin_balance() public view isAdmin returns (uint256) {
         return address(msg.sender).balance;
+    }
+
+    // function to return contract balance
+    function get_contract_balance() public view isAdmin returns (uint256) {
+        return address(this).balance;
     }
 
     // function to get all the candidates with given election id
@@ -300,5 +307,64 @@ contract EVote {
         elections[_election_id].voters[msg.sender] = voter;
         elections[_election_id].no_of_voters++;
         elections[_election_id].candidates[_candidate_address].no_of_votes++;
+    }
+
+    // function to publish result
+    // max is index
+    // there could be multiple candidate having same max voters
+    uint256[] max;
+
+    function choose_winner(uint256 _election_id)
+        public
+        returns (address won_by)
+    {
+        Election storage election = elections[_election_id];
+
+        require(
+            election.end_at < block.timestamp,
+            "the election process has not been completed"
+        );
+
+        if (election.no_of_candidates == 0 || election.no_of_voters == 0) {
+            return address(0);
+        }
+
+        max.push(0);
+        for (uint256 i = 1; i < election.no_of_candidates; i++) {
+            uint256 max_votes = election
+                .candidates[election.candidatesAddress[max[0]]]
+                .no_of_votes;
+            uint256 current_candidate_votes = election
+                .candidates[election.candidatesAddress[i]]
+                .no_of_votes;
+            if (current_candidate_votes > max_votes) {
+                max = new uint256[](0);
+                max.push(i);
+            } else if (current_candidate_votes == max_votes) {
+                max.push(i);
+            }
+        }
+        address winner = address(0);
+        if (max.length == 1) {
+            // single winner
+            winner = election.candidatesAddress[max[0]];
+        } else if (max.length > 1) {
+            // choose winner randomly
+            winner = election.candidatesAddress[
+                max[random_number(max.length - 1)]
+            ];
+        }
+        election.won_by = winner;
+        return winner;
+    }
+
+    function random_number(uint256 _up_to) private view returns (uint256) {
+        uint256 random = uint256(
+            keccak256(
+                abi.encodePacked(block.timestamp, msg.sender, block.number)
+            )
+        ) % (_up_to + 1);
+
+        return random;
     }
 }
