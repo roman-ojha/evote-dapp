@@ -1,10 +1,15 @@
 import React from "react";
-import getContract from "@/utils/getContract";
+import {} from "ethers";
+import { getContract } from "@/utils/getEther";
 
 export default function Home() {
   async function getProvider() {
-    const contract = await getContract();
-    console.log(await contract.get_user());
+    try {
+      const contract = await getContract();
+      console.log(await contract.get_user());
+    } catch (err: any) {
+      alert(err.reason);
+    }
   }
 
   return (

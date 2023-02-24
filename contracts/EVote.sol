@@ -43,6 +43,11 @@ struct Election {
     address won_by;
 }
 
+struct ResponseMsg {
+    uint256 status;
+    string message;
+}
+
 contract EVote {
     address payable admin;
     mapping(address => User) users;
@@ -76,7 +81,7 @@ contract EVote {
         _;
     }
 
-    function login() public {
+    function login() external returns (ResponseMsg memory) {
         if (!users[msg.sender].does_exist) {
             // if user doesn't exist already
             User memory new_user = User({
@@ -86,6 +91,12 @@ contract EVote {
             });
             users[msg.sender] = new_user;
         }
+
+        ResponseMsg memory response = ResponseMsg({
+            status: 200,
+            message: "Login Successfully"
+        });
+        return response;
     }
 
     function get_user() public view isUser returns (User memory) {
