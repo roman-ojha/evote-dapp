@@ -1,13 +1,13 @@
 import { ethers } from "ethers";
 
-const getEther = (): ethers.BrowserProvider | unknown => {
-  return new Promise((resolve, reject) => {
+const getEther = (): any => {
+  return new Promise(async (resolve, reject) => {
     if (typeof window.ethereum !== "undefined") {
-      // await requestAccount();
+      // const account = await requestAccount();
       try {
         const provider = new ethers.BrowserProvider(window.ethereum);
         resolve(provider);
-      } catch (err) {
+      } catch (err: any) {
         reject(err);
       }
     }
@@ -22,11 +22,14 @@ const getEther = (): ethers.BrowserProvider | unknown => {
           const accounts = await window.ethereum.request({
             method: "eth_requestAccounts",
           });
+          return accounts[0];
         } catch (err) {
           console.log(err);
+          return "";
         }
       } else {
         console.log("Wallet doesn't exist");
+        return "";
       }
     }
   });
