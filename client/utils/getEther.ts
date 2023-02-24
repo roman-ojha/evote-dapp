@@ -5,8 +5,8 @@ const getEther = (): any => {
     if (typeof window.ethereum !== "undefined") {
       // const account = await requestAccount();
       try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        resolve(provider);
+        // const provider = new ethers.JsonRpcProvider(window.ethereum);
+        // resolve(provider);
       } catch (err: any) {
         reject(err);
       }

@@ -92,6 +92,10 @@ contract EVote {
         return users[msg.sender];
     }
 
+    function test(string memory _msg) public pure returns (string memory) {
+        return _msg;
+    }
+
     function create_new_election(
         string memory _name,
         string memory _desc,
