@@ -1,20 +1,39 @@
-import React from "react";
-import {} from "ethers";
+import React, { useEffect, useState } from "react";
 import { getContract } from "@/utils/getEther";
+import { useRouter } from "next/router";
+
+interface User {
+  address: string;
+  role: "admin" | "user" | null;
+}
 
 export default function Home() {
-  async function getProvider() {
+  const [user, setUser] = useState<User>({
+    address: "",
+    role: null,
+  });
+
+  const router = useRouter();
+  async function authenticate() {
     try {
       const contract = await getContract();
-      console.log(await contract.get_user());
+      const user = await contract.get_user();
+      setUser({
+        address: user[0],
+        role: user[1],
+      });
     } catch (err: any) {
       alert(err.reason);
+      router.push({ pathname: "/login" });
     }
   }
+  useEffect(() => {
+    authenticate();
+  }, []);
 
   return (
     <>
-      <button onClick={getProvider}>call Function</button>
+      <h1>Welcome {user.address}</h1>
     </>
   );
 }

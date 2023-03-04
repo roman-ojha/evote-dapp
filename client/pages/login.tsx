@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { getProvider } from "@/utils/getEther";
 import { getContract } from "@/utils/getEther";
 import { useRouter } from "next/router";
 
 const SignIn = (): JSX.Element => {
   const router = useRouter();
+  let checkUser: NodeJS.Timer;
   const signIn = async () => {
     try {
       if (!window.ethereum) {
@@ -19,18 +20,34 @@ const SignIn = (): JSX.Element => {
         //   ],
         // });
         const contract = await getContract();
-        const res = await contract.login();
-        if (res) {
-          router.push({ pathname: "/" });
-        }
+        contract.login().then((res) => {
+          if (res) {
+            checkUser = setInterval(async () => {
+              try {
+                const user = await contract.get_user();
+                if (user) {
+                  clearInterval(checkUser);
+                  router.push({ pathname: "/" });
+                }
+              } catch (err) {}
+            }, 1000);
+          }
+        });
       }
     } catch (err: any) {
       console.log(err.message);
     }
   };
+  useEffect(() => {
+    return () => {
+      clearInterval(checkUser);
+    };
+  }, []);
   return (
     <>
-      <button onClick={signIn}>Connect Wallet</button>
+      <div id="container">
+        <button onClick={signIn}>Connect Wallet</button>
+      </div>
     </>
   );
 };

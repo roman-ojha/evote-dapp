@@ -75,13 +75,14 @@ contract EVote {
     }
     modifier isAdmin() {
         require(
-            users[msg.sender].user_type == Role.admin,
+            users[msg.sender].does_exist &&
+                users[msg.sender].user_type == Role.admin,
             "unauthorized admin, you are not an admin"
         );
         _;
     }
 
-    function login() external returns (ResponseMsg memory) {
+    function login() external {
         if (!users[msg.sender].does_exist) {
             // if user doesn't exist already
             User memory new_user = User({
@@ -92,10 +93,14 @@ contract EVote {
             users[msg.sender] = new_user;
         }
 
-        return ResponseMsg({status: 200, message: "Login Successfully"});
+        // return ResponseMsg({status: 200, message: "Login Successfully"});
     }
 
     function get_user() public view isUser returns (User memory) {
+        return users[msg.sender];
+    }
+
+    function check_admin() public view isAdmin returns (User memory) {
         return users[msg.sender];
     }
 
