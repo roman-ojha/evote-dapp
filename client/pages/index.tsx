@@ -14,7 +14,7 @@ export default function Home() {
 
   return (
     <>
-      <button onClick={getProvider}>Connect Wallet</button>
+      <button onClick={getProvider}>call Function</button>
     </>
   );
 }

@@ -92,11 +92,7 @@ contract EVote {
             users[msg.sender] = new_user;
         }
 
-        ResponseMsg memory response = ResponseMsg({
-            status: 200,
-            message: "Login Successfully"
-        });
-        return response;
+        return ResponseMsg({status: 200, message: "Login Successfully"});
     }
 
     function get_user() public view isUser returns (User memory) {
