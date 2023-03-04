@@ -22,7 +22,7 @@ const buttonStyle: CSS.Properties = {
 
 const SignIn = (): JSX.Element => {
   const router = useRouter();
-  let checkUser: NodeJS.Timer;
+  let checkUser: NodeJS.Timer | null = null;
   const divElm: React.MutableRefObject<null | HTMLDivElement> = useRef(null);
   const processing = () => {
     const pElm = document.createElement("p");
@@ -51,7 +51,7 @@ const SignIn = (): JSX.Element => {
               checkUser = setInterval(async () => {
                 const user = await contract.get_user();
                 if (user) {
-                  clearInterval(checkUser);
+                  clearInterval(checkUser!);
                   router.push({ pathname: "/" });
                 }
               }, 1000);
@@ -67,9 +67,9 @@ const SignIn = (): JSX.Element => {
   };
   useEffect(() => {
     return () => {
-      clearInterval(checkUser);
+      clearInterval(checkUser!);
     };
-  }, []);
+  }, [checkUser]);
   return (
     <>
       <div id="container" ref={divElm} style={containerStyle}>

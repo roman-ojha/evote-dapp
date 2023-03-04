@@ -14,22 +14,22 @@ export default function Home() {
   });
 
   const router = useRouter();
-  async function authenticate() {
-    try {
-      const contract = await getContract();
-      const user = await contract.get_user();
-      setUser({
-        address: user[0],
-        role: user[1],
-      });
-    } catch (err: any) {
-      alert(err.reason);
-      router.push({ pathname: "/login" });
-    }
-  }
   useEffect(() => {
+    async function authenticate() {
+      try {
+        const contract = await getContract();
+        const user = await contract.get_user();
+        setUser({
+          address: user[0],
+          role: user[1],
+        });
+      } catch (err: any) {
+        // alert(err.reason);
+        router.push({ pathname: "/login" });
+      }
+    }
     authenticate();
-  }, []);
+  }, [router]);
 
   return (
     <>
