@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { createElement, useEffect, useRef } from "react";
 import { getProvider } from "@/utils/getEther";
 import { getContract } from "@/utils/getEther";
 import { useRouter } from "next/router";
@@ -6,6 +6,13 @@ import { useRouter } from "next/router";
 const SignIn = (): JSX.Element => {
   const router = useRouter();
   let checkUser: NodeJS.Timer;
+  const divElm: React.MutableRefObject<null | HTMLDivElement> = useRef(null);
+  const processing = () => {
+    const pElm = document.createElement("p");
+    console.log(pElm);
+    pElm.innerHTML = "Processing... please wait for a while";
+    divElm.current?.replaceChildren(pElm);
+  };
   const signIn = async () => {
     try {
       if (!window.ethereum) {
@@ -22,6 +29,7 @@ const SignIn = (): JSX.Element => {
         const contract = await getContract();
         contract.login().then((res) => {
           if (res) {
+            processing();
             checkUser = setInterval(async () => {
               try {
                 const user = await contract.get_user();
@@ -29,7 +37,9 @@ const SignIn = (): JSX.Element => {
                   clearInterval(checkUser);
                   router.push({ pathname: "/" });
                 }
-              } catch (err) {}
+              } catch (err) {
+                processing();
+              }
             }, 1000);
           }
         });
@@ -45,7 +55,7 @@ const SignIn = (): JSX.Element => {
   }, []);
   return (
     <>
-      <div id="container">
+      <div id="container" ref={divElm}>
         <button onClick={signIn}>Connect Wallet</button>
       </div>
     </>
