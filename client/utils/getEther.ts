@@ -14,7 +14,7 @@ const getProvider = (): ethers.BrowserProvider | ethers.JsonRpcProvider => {
 };
 
 const getContract = async (): Promise<Contract> => {
-  const contractAddress = "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82";
+  const contractAddress = "0x9A676e781A523b5d0C0e43731313A708CB607508";
   const provider = getProvider();
   const signer = await provider.getSigner();
   const contract = new ethers.Contract(contractAddress, EVote.abi, signer);

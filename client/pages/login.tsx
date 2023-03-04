@@ -1,7 +1,24 @@
-import React, { createElement, useEffect, useRef } from "react";
-import { getProvider } from "@/utils/getEther";
+import React, { useEffect, useRef } from "react";
 import { getContract } from "@/utils/getEther";
 import { useRouter } from "next/router";
+import CSS from "csstype";
+
+const containerStyle: CSS.Properties = {
+  width: "100%",
+  height: "100vh",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+};
+
+const buttonStyle: CSS.Properties = {
+  padding: "10px",
+  borderRadius: "5px",
+  backgroundColor: "lightgreen",
+  borderWidth: "0px",
+  color: "black",
+  cursor: "pointer",
+};
 
 const SignIn = (): JSX.Element => {
   const router = useRouter();
@@ -9,8 +26,8 @@ const SignIn = (): JSX.Element => {
   const divElm: React.MutableRefObject<null | HTMLDivElement> = useRef(null);
   const processing = () => {
     const pElm = document.createElement("p");
-    console.log(pElm);
     pElm.innerHTML = "Processing... please wait for a while";
+    pElm.setAttribute("style", "font-size:20px");
     divElm.current?.replaceChildren(pElm);
   };
   const signIn = async () => {
@@ -28,19 +45,19 @@ const SignIn = (): JSX.Element => {
         // });
         const contract = await getContract();
         contract.login().then((res) => {
-          if (res) {
-            processing();
-            checkUser = setInterval(async () => {
-              try {
+          try {
+            if (res) {
+              processing();
+              checkUser = setInterval(async () => {
                 const user = await contract.get_user();
                 if (user) {
                   clearInterval(checkUser);
                   router.push({ pathname: "/" });
                 }
-              } catch (err) {
-                processing();
-              }
-            }, 1000);
+              }, 1000);
+            }
+          } catch (err) {
+            processing();
           }
         });
       }
@@ -55,8 +72,10 @@ const SignIn = (): JSX.Element => {
   }, []);
   return (
     <>
-      <div id="container" ref={divElm}>
-        <button onClick={signIn}>Connect Wallet</button>
+      <div id="container" ref={divElm} style={containerStyle}>
+        <button onClick={signIn} style={buttonStyle}>
+          Connect Wallet
+        </button>
       </div>
     </>
   );
